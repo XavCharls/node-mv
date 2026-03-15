@@ -1,0 +1,10 @@
+{
+    "mainFolder": "carpeta comun con todas las series en el destino",
+    "series": [
+        {
+            "title": "Titulo de la serie correspondiente al archivo para identificarlo",
+            "destFolder": "carpeta de destino dentro de mainFolder",
+            "active": true
+        }
+    ]
+}
