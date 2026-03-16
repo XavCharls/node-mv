@@ -1,14 +1,26 @@
 import { exec } from 'child_process'
-
-import { promisify } from 'util';
+import { promisify, parseArgs } from 'util';
 import fs from 'fs';
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 
+const options = {
+  test: { type: 'boolean' },
+  command: { type: 'string' },
+  help: { type: 'boolean' },
+};
+
+const { values, positionals } = parseArgs({ options, allowPositionals: true, strict: false, tokens: true });
+
+if (values.help) {
+    showMenu()
+    process.exit(0)
+}
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const execPromise = promisify(exec)
-
-var IS_TEST = process.argv[3] == 'test'
+var IS_TEST = values.test || false
+var COMMAND = (values.command == 'mv') ? 'mv' : 'cp'
 console.log("############## " + new Date().toISOString() + " ##############")
 
 try {
@@ -21,7 +33,7 @@ try {
 index()
 
 async function index() {
-    let file = process.argv[2]
+    let file = positionals[0]
 
     if (!file) {
         showMenu()
@@ -52,25 +64,25 @@ async function index() {
         serieConfig.destFolder += '/'
     }
 
-    let mvCommand = `mv "${file}" "${CONFIG.mainFolder}${serieConfig.destFolder}"`
+    let fullCommand = `${COMMAND} "${file}" "${CONFIG.mainFolder}${serieConfig.destFolder}"`
 
     if (IS_TEST) {
         console.log("comando de crear carpeta: " + checkFolderCommand)
-        console.log("comando de mv : " + mvCommand)
+        console.log(`comando de ${COMMAND}: ${fullCommand}`)
         return
     }
 
-    let mvResult = await execPromise(mvCommand)
-    if (mvResult.stderr) {
-        console.log(mvResult.stderr)
+    let result = await execPromise(fullCommand)
+    if (result.stderr) {
+        console.log(result.stderr)
         return
     }
 
-    if (mvResult.stdout) {
-        console.log(mvResult.stdout)
+    if (result.stdout) {
+        console.log(result.stdout)
     }
 
-    console.log("- " + new Date().toISOString() + " movido " + file + " ---> " + serieConfig.destFolder)
+    console.log(`- ${new Date().toISOString()} ${COMMAND == 'mv' ? 'movido' : 'copiado'} ${file} ---> ${CONFIG.mainFolder}${serieConfig.destFolder}`)
 }
 
 /**
@@ -83,6 +95,10 @@ function showMenu() {
     console.log("   ej. node mv.js \"/descargas/One Punch Man Season 01 episode 1x01.mkv\"")
     console.log("Se comprobaran los titulos de config.json con el archivo para obtener la ruta del directorio destino")
     console.log("Se mueve el archivo a la ruta")
+    console.log("Opciones:")
+    console.log("  --test: Ejecutar en modo de prueba")
+    console.log("  --command: Comando a ejecutar (mv o cp) default cp ej. --command=mv")
+    console.log("  --help: Mostrar esta ayuda")
 }
 
 /**
