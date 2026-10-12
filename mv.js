@@ -116,7 +116,7 @@ function getDestFolder(file) {
     }
 
     if (res.length > 1) {
-        console.log("- Hay varias series que coinciden con el titulo indicado en la configuracion")
+        console.log("- Hay varias series que coinciden con el titulo indicado en la configuracion: " + file)
         return false
     }
 
